@@ -51,7 +51,7 @@ foreach($contract in $p.Contracts) {
     $group_name = "$azureAdGroupNamePrefix$($contract.Department.ExternalId)$azureAdGroupNameSuffix"  
     $group_name = Get-ADSanitizeGroupName -Name $group_name
 
-    if( ($contract.Context.InConditions) -or (-Not($dryRun -eq $True) ) )
+    if( ($contract.Context.InConditions) )
     {        
         $desiredPermissions[$group_name] = $group_name
     }
