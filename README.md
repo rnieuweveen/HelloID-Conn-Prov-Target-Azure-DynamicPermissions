@@ -14,7 +14,7 @@ The interface to communicate with Microsoft Azure AD is through the Microsoft Gr
 
 For this connector we have the option to correlate to existing Azure AD users and provision dynamic groupmemberships.
 
-If you want to create Azure accounts or provide direct groupmemberships (not dynamic), please use the built-in Microsoft Azure Active Directory target system.
+If you want to create Azure accounts, please use the built-in Microsoft Azure Active Directory target system.
 
 <!-- GETTING STARTED -->
 ## Getting the Azure AD graph API access
