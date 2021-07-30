@@ -207,9 +207,6 @@ foreach($permission in $currentPermissions.GetEnumerator()) {
                 }elseif(@($azureADGroup).count -gt 1){
                     throw "Multiple groups found with displayName=$($permission.Name) "
                 }
-                else{
-                    Write-Warning "Group displayName=$($permission.Name) not found"
-                }
             }
             catch
             {
@@ -235,86 +232,14 @@ foreach($permission in $currentPermissions.GetEnumerator()) {
 }
 
 # Update current permissions
-<# Updates not needed for Group Memberships
+<# Updates not needed for Group Memberships.
 if ($o -eq "update") {
-    foreach($permission in $currentPermissions.GetEnumerator()) {    
-        if($desiredPermissions.ContainsKey($permission.Name)){
-            # Update user to Membership
-            $permissionSuccess = $true
-            
-            # Custom check if Custom attribute 'OrganisatorischeEenheidMicrosoft365GroupExists' is true
-            if($true -ne $contract.Custom.$sourceValidationField){
-                Write-Information "Azure AD Group [$($permission.Name)] does not exist. Skipping update action";
-            }else{
-                if(-Not($dryRun -eq $True))
-                {
-                    try
-                    {
-                        Write-Verbose -Verbose "Generating Microsoft Graph API Access Token.."
-                        $baseAuthUri = "https://login.microsoftonline.com/"
-                        $authUri = $baseAuthUri + "$AADTenantID/oauth2/token"
-
-                        $body = @{
-                            grant_type      = "client_credentials"
-                            client_id       = "$AADAppId"
-                            client_secret   = "$AADAppSecret"
-                            resource        = "https://graph.microsoft.com"
-                        }
-
-                        $Response = Invoke-RestMethod -Method POST -Uri $authUri -Body $body -ContentType 'application/x-www-form-urlencoded'
-                        $accessToken = $Response.access_token;
-
-                        #Add the authorization header to the request
-                        $authorization = @{
-                            Authorization = "Bearer $accesstoken";
-                            'Content-Type' = "application/json";
-                            Accept = "application/json";
-                        }
-
-                        Write-Verbose -Verbose "Searching for Group displayName=$($permission.Name)"
-                        $baseSearchUri = "https://graph.microsoft.com/"
-                        $searchUri = $baseSearchUri + 'v1.0/groups?$filter=displayName+eq+' + "'$($permission.Name)'"
-
-                        $azureADGroupResponse = Invoke-RestMethod -Uri $searchUri -Method Get -Headers $authorization -Verbose:$false
-                        $azureADGroup = $azureADGroupResponse.value
-
-                        if(@($azureADGroup).count -eq 1) {
-                            Write-Information "Found Group [$($permission.Name)]. Granting permission for [$($aRef)]";
-                            $baseGraphUri = "https://graph.microsoft.com/"
-                            $addGroupMembershipUri = $baseGraphUri + "v1.0/groups/$($azureADGroup.id)/members" + '/$ref'
-                            $body = @{ "@odata.id"= "https://graph.microsoft.com/v1.0/users/$($aRef)" } | ConvertTo-Json -Depth 10
-
-                            $response = Invoke-RestMethod -Method POST -Uri $addGroupMembershipUri -Body $body -Headers $authorization -Verbose:$false
-                        
-                            Write-Information "Successfully granted Permission for Group [$($permission.Name)] for [$($aRef)]";
-                        }elseif(@($azureADGroup).count -gt 1){
-                            throw "Multiple groups found with displayName=$($permission.Name) "
-                        }
-                        else{
-                            throw "Group displayName=$($permission.Name) not found"
-                        }
-                    }
-                    catch
-                    {
-                        if($_ -like "*One or more added object references already exist for the following modified properties*"){
-                            Write-Information "AzureAD user [$($aRef)] is already a member of group";
-                        }else{
-                            $permissionSuccess = $False
-                            $success = $False
-                            # Log error for further analysis.  Contact Tools4ever Support to further troubleshoot
-                            Write-Error ("Error Granting Permission for Group [{0}]:  {1}" -f $permission.Name, $_)
-                        }
-                    }
-                }
-
-                $auditLogs.Add([PSCustomObject]@{
-                    Action = "UpdateDynamicPermission"
-                    Message = "Updated membership: {0}" -f $permission.Name
-                    IsError = -NOT $permissionSuccess
-                })
-            }
-        }
-
+    foreach($permission in $newCurrentPermissions.GetEnumerator()) {    
+        $auditLogs.Add([PSCustomObject]@{
+            Action = "UpdateDynamicPermission"
+            Message = "Updated access to department share $($permission.Value)"
+            IsError = $False
+        })
     }
 }
 #>
