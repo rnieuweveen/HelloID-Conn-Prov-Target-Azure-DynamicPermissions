@@ -42,6 +42,12 @@ function Get-ADSanitizeGroupName
     $newName = $newName -replace '\.\.','.';
     return $newName;
 }
+
+function Remove-StringLatinCharacters
+{
+    PARAM ([string]$String)
+    [Text.Encoding]::ASCII.GetString([Text.Encoding]::GetEncoding("Cyrillic").GetBytes($String))
+}
 #endregion Supporting Functions
 
 #region Change mapping here
@@ -50,6 +56,8 @@ foreach($contract in $p.Contracts) {
     # M365-Functie-<functienaam>
     $group_name = "$azureAdGroupNamePrefix$($contract.Title.Name)$azureAdGroupNameSuffix"  
     $group_name = Get-ADSanitizeGroupName -Name $group_name
+    # Remove Diactritics
+    $group_name = Remove-StringLatinCharacters $group_name
 
     if( ($contract.Context.InConditions) )
     {        
