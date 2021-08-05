@@ -43,6 +43,12 @@ function Get-ADSanitizeGroupName
     $newName = $newName -replace '\.\.','.';
     return $newName;
 }
+
+function Remove-StringLatinCharacters
+{
+    PARAM ([string]$String)
+    [Text.Encoding]::ASCII.GetString([Text.Encoding]::GetEncoding("Cyrillic").GetBytes($String))
+}
 #endregion Supporting Functions
 
 #region Change mapping here
@@ -50,6 +56,8 @@ $desiredPermissions = @{};
 foreach($contract in $p.Contracts) {
     $group_name = "$azureAdGroupNamePrefix$($contract.Department.ExternalId)$azureAdGroupNameSuffix"  
     $group_name = Get-ADSanitizeGroupName -Name $group_name
+    # Remove Diactritics
+    $group_name = Remove-StringLatinCharacters $group_name
 
     if( ($contract.Context.InConditions) )
     {        
